@@ -68,7 +68,9 @@ async function testFile(filename, extension) {
     const start = index * stepSeconds;
     const length = Math.min(blockSeconds, duration - start);
     run(['-hide_banner', '-loglevel', 'error', '-y', '-ss', start.toFixed(3), '-i', filename,
-      '-t', length.toFixed(3), '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', wav]);
+      '-t', length.toFixed(3), '-vn', '-sn', '-dn', '-af',
+      'highpass=f=70,lowpass=f=7600,afftdn=nf=-25,dynaudnorm=f=150:g=15',
+      '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', wav]);
     const wave = parseWave(await readFile(wav));
     if (wave.codec !== 1 || wave.channels !== 1 || wave.sampleRate !== 16000 || wave.bits !== 16)
       throw new Error(`${extension}: formato WAV incorrecto en bloque ${index + 1}`);

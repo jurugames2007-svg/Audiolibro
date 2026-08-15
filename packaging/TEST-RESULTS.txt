@@ -9,8 +9,10 @@ Se generaron localmente dos entradas sintéticas de 2 horas exactas:
 • MP3, 16 kHz mono: duración detectada 7200,07 s.
 • M4A/AAC, 16 kHz mono: duración detectada 7200,00 s.
 
-Para cada entrada se ejecutó el mismo cálculo y comando FFmpeg de la GUI:
+Para cada entrada se ejecutó el mismo cálculo, preprocesamiento de voz/ruido y
+comando FFmpeg de la GUI:
 
+• Filtros highpass, lowpass, afftdn y dynaudnorm aplicados sin error.
 • 9 bloques calculados.
 • Bloques 1 a 8: 900,000 s.
 • Inicio entre bloques: 898 s (solapamiento de 2 s).

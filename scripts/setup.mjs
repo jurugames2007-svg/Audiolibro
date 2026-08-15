@@ -28,7 +28,7 @@ const assets = [
 ];
 
 const runtimeFiles = [
-  ['VozLarga.exe', 'VozLarga.exe', 894976, '63834e0eab84ab8da487e768598c24a71bd6d4a1041044436592df1b215675f6'],
+  ['VozLarga.exe', 'VozLarga.exe', 912896, 'ef81f46e94d0bd38b927182172770f891ef8b0e579996212d7c5ac9e3cf21231'],
   ['engine/whisper-vulkan.exe', 'engine/whisper-vulkan.exe', 54074880, 'a71b5794f0ce6a7646294600bc55319574a5591eab36dba80c9bccae8429bf82'],
   ['engine/whisper-cpu.exe', 'engine/whisper-cpu.exe', 3145728, 'd3c3fa58dffbfde190731f140cff959de5dc9fc779423e0ff4d5b8164adc640e'],
 ];

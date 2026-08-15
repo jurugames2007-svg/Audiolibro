@@ -37,7 +37,32 @@ de la tarjeta gráfica. No copie DLL de Vulkan de sitios de terceros.
 ARCHIVOS ADMITIDOS
 ------------------
 FFmpeg local convierte, entre otros: MP3, M4A/AAC, WAV, FLAC, OGG/Opus, MP4,
-MKV, WebM, MOV y AVI. La pista se normaliza a PCM mono, 16 kHz, por bloques.
+MKV, WebM, MOV y AVI. La pista se normaliza a PCM de 16 kHz por bloques.
+
+MEJORA Y DIAGNÓSTICO DEL AUDIO (SIN OTRO MODELO IA)
+----------------------------------------------------
+“Mejorar voz/ruido” viene activado. Usa filtros deterministas de FFmpeg para:
+• eliminar retumbo bajo 70 Hz y frecuencias no vocales sobre 7600 Hz;
+• reducir ruido estacionario como hiss o ventilación;
+• normalizar diferencias de volumen sin recortar intencionalmente la señal.
+Si un códec no admite la cadena, el bloque se repite automáticamente sin filtro.
+La GUI mide RMS, pico y porcentaje de clipping por bloque. Un bloque realmente
+silencioso se guarda vacío sin ejecutar Whisper, evitando alucinaciones y gasto.
+El clipping ya presente no puede reconstruirse: se informa como advertencia.
+
+CONTEXTO, NOMBRES Y ACENTOS
+---------------------------
+En “Contexto” puede escribir nombres propios, empresa, localidad, vocabulario
+médico/legal/técnico y dialecto (por ejemplo: “español chileno, Biobío”). Ese
+texto y el final del bloque anterior se pasan como prompt al siguiente bloque.
+Esto reduce cambios de grafía y mejora continuidad, pero no altera el audio.
+
+REUNIONES Y HABLANTES
+---------------------
+“Reunión estéreo (canales)” conserva dos canales y usa la diarización estéreo de
+whisper.cpp. Es útil si cada participante fue grabado en un canal diferente.
+No puede separar de forma fiable dos personas solapadas dentro del mismo canal:
+eso requeriría otro modelo de diarización, que no se agrega a este portable.
 
 TRABAJOS LARGOS, PAUSA Y REANUDACIÓN
 ------------------------------------
@@ -58,13 +83,25 @@ SILERO VAD
 Silero VAD es opcional y viene desactivado para priorizar la ejecución robusta
 de grabaciones largas. Puede acelerar archivos con silencios cuando Vulkan está
 funcionando. Si se activa el respaldo CPU, VozLarga desactiva VAD automáticamente
-porque su ruta CPU en whisper.cpp 1.9.2 puede ser extremadamente lenta. Cambiar
-VAD invalida el checkpoint anterior para no mezclar criterios distintos.
+porque su ruta CPU en whisper.cpp 1.9.2 puede ser extremadamente lenta. VAD
+puede omitir música sin voz, risas y pausas cuando Vulkan está disponible, pero
+ningún filtro determinista distingue perfectamente música con voz de habla.
+Cambiar VAD invalida el checkpoint anterior para no mezclar criterios distintos.
+
+SALIDA Y REVISIÓN
+-----------------
+El consolidado elimina repetición del solapamiento y forma párrafos de longitud
+manejable sin inventar correcciones gramaticales. “Abrir TXT” usa el editor
+predeterminado de Windows (con búsqueda/reemplazo) y “Reproducir audio” abre el
+archivo original en su reproductor. Un TXT no contiene tiempos por palabra, por
+lo que hacer clic en una palabra para saltar al audio no está disponible.
 
 PRIVACIDAD
 ----------
-El programa no contiene código de red. VozLarga.exe solo inicia los ejecutables
-locales incluidos. FFmpeg, whisper.cpp y los modelos trabajan en este equipo.
+VozLarga.exe no contiene código de red y solo inicia ejecutables locales.
+FFmpeg, whisper.cpp y los modelos trabajan en este equipo. Whisper Small es
+imprescindible para convertir voz en texto; sin un modelo de reconocimiento no
+existe transcripción automática. Las mejoras descritas no agregan otra IA.
 
 RENDIMIENTO
 -----------

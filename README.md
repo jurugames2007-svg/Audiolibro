@@ -5,10 +5,16 @@ Aplicación de escritorio para **Windows 10/11 x64** que transcribe grabaciones 
 - whisper.cpp 1.9.2 con backend Vulkan para GPU AMD y motor CPU independiente.
 - Whisper Small multilingüe Q5_1.
 - Silero VAD opcional.
-- Conversión local con FFmpeg.
+- Conversión local con FFmpeg para MP3, M4A/AAC, WAV, FLAC y vídeo.
+- Mejora determinista de voz: filtro de graves/agudos, reducción de ruido y normalización, sin un segundo modelo IA.
+- Diagnóstico de volumen/clipping y omisión de bloques completamente silenciosos.
+- Contexto configurable para nombres propios y términos técnicos, más continuidad entre bloques.
+- Diarización opcional por canales cuando la reunión esté grabada en estéreo.
 - Bloques de 15 minutos con 2 segundos de solapamiento.
 - Pausa y reanudación mediante checkpoints.
-- Un único TXT UTF-8, verificado y publicado de forma atómica.
+- Párrafos legibles, acceso directo al audio/TXT y publicación atómica UTF-8.
+
+Whisper Small es el único modelo necesario para reconocer voz. La limpieza de audio, validación, párrafos y herramientas de revisión no descargan modelos adicionales. Transcribir voz sin ningún modelo de reconocimiento no es técnicamente posible.
 
 ## Inicio sencillo con npm
 

@@ -66,8 +66,13 @@ PIPELINE DE LA INTERFAZ
 -----------------------
 • Sondeo local de duración con FFmpeg.
 • Bloques de hasta 900 s, paso de 898 s (2 s de solapamiento).
-• PCM WAV mono a 16 kHz para normalizar formatos.
-• Idioma fijado a español; salida TXT sin marcas de tiempo.
+• PCM WAV a 16 kHz mono, o estéreo cuando se solicita diarización por canales.
+• Mejora opcional y determinista: highpass 70 Hz, lowpass 7600 Hz, afftdn y
+  dynaudnorm. Si falla, reintento automático sin filtros.
+• Analizador PCM interno de RMS, pico, clipping, formato y silencio; bloques
+  silenciosos se omiten sin llamar a Whisper.
+• Idioma fijado a español; prompt del usuario más contexto del bloque anterior.
+• Diarización estéreo opcional de whisper.cpp; no separa voces del mismo canal.
 • Silero VAD opcional, desactivado por defecto y limitado a Vulkan; el respaldo
   CPU lo omite para evitar la regresión de rendimiento medida en audio largo.
 • Vulkan primero, watchdog de 20 minutos por bloque y reintento CPU sin VAD
@@ -75,8 +80,9 @@ PIPELINE DE LA INTERFAZ
 • Checkpoint atómico después de verificar cada TXT de bloque.
 • Eliminación de texto repetido en el solapamiento mediante coincidencia de
   sufijo/prefijo de palabras.
-• Consolidación UTF-8, escritura temporal duradera, lectura de verificación,
-  reemplazo final atómico y borrado posterior de temporales.
+• Consolidación UTF-8, párrafos deterministas, escritura temporal duradera,
+  lectura de verificación, reemplazo final atómico y borrado de temporales.
+• Botones para abrir el TXT en el editor de Windows y reproducir el audio.
 
 VERIFICACIÓN REALIZADA EN EL ENTORNO DE CONSTRUCCIÓN
 -----------------------------------------------------
