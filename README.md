@@ -39,12 +39,16 @@ npm run setup
 
 En clones Git, el auto-update se omite si hay cambios locales o ramas divergentes. Sin conexión siempre se abre la versión instalada. También puede desactivarse definiendo `VOZLARGA_NO_UPDATE=1`.
 
-Comprobación integral y ZIP opcional:
+Comprobación integral, regresión MP3/M4A de dos horas y ZIP opcional:
 
 ```powershell
 npm run verify
+npm run test:formats
 npm run portable:zip
 ```
+
+`npm run test:formats` genera temporalmente MP3 y M4A sintéticos de dos horas,
+valida sus 18 bloques PCM y los elimina al terminar.
 
 El ZIP resultante se llama `VozLarga-PC-1.0-Windows-x64.zip`.
 

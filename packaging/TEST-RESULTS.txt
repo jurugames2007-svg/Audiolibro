@@ -1,0 +1,88 @@
+VOZLARGA PC 1.0 — PRUEBAS DE AUDIO LARGO
+=========================================
+Fecha: 2026-08-15
+
+PRUEBA DE FORMATOS Y BLOQUES
+----------------------------
+Se generaron localmente dos entradas sintéticas de 2 horas exactas:
+
+• MP3, 16 kHz mono: duración detectada 7200,07 s.
+• M4A/AAC, 16 kHz mono: duración detectada 7200,00 s.
+
+Para cada entrada se ejecutó el mismo cálculo y comando FFmpeg de la GUI:
+
+• 9 bloques calculados.
+• Bloques 1 a 8: 900,000 s.
+• Inicio entre bloques: 898 s (solapamiento de 2 s).
+• Bloque 9: aproximadamente 16 s.
+• Salida de cada bloque: RIFF/WAV PCM s16le, mono, 16000 Hz.
+• Los 18 bloques superaron validación de cabecera, formato y duración.
+
+Resultado: APROBADO para MP3 y M4A de 2 horas.
+
+PRUEBA COMPLETA DEL PIPELINE
+----------------------------
+Se procesó la entrada MP3 sintética completa de 2 horas con:
+
+• whisper.cpp 1.9.2 CPU nativo.
+• Whisper Tiny multilingüe F16 (modelo disponible en el sandbox de pruebas).
+• 2 hilos CPU.
+• VAD desactivado.
+• Los mismos bloques, argumentos TXT y checkpoints que usa VozLarga.
+
+Resultados:
+
+• 9 de 9 bloques convertidos y transcritos correctamente.
+• Cada TXT de bloque existió y pudo leerse.
+• Checkpoint actualizado después de cada bloque.
+• WAV temporal eliminado después de cada bloque.
+• TXT final consolidado, copiado y comparado byte por byte.
+• Tiempo total en el sandbox de 2 CPU: 1261 s (21 min 01 s).
+
+Resultado: APROBADO para continuidad de un trabajo MP3 de 2 horas.
+
+El uso de Tiny en esta prueba valida el pipeline, no el rendimiento ni la
+precisión de Whisper Small Q5_1. La distribución sigue usando exclusivamente
+Small Q5_1. La prueba física de rendimiento Small+Vulkan debe hacerse en la
+RX 5600 XT del destinatario.
+
+REGRESIÓN DETECTADA Y CORREGIDA: SILERO CPU
+-------------------------------------------
+Durante las pruebas, Silero VAD por CPU de whisper.cpp 1.9.2 tardó más de 180 s
+en solo 30 s de silencio. Para impedir que un audio largo parezca bloqueado:
+
+• VAD ahora viene desactivado de forma predeterminada.
+• VAD solo se añade al motor Vulkan.
+• Al usar o activar el respaldo CPU, VAD se desactiva automáticamente.
+• Cada bloque Vulkan tiene watchdog de 20 minutos; si se excede, se termina ese
+  proceso y se repite el bloque con el motor CPU independiente sin VAD.
+
+REGRESIÓN DETECTADA Y CORREGIDA: REGISTRO FFMPEG
+-------------------------------------------------
+Los handles usados para stderr/stdout no eran heredables. FFmpeg podía iniciarse
+pero la GUI recibía un proceso.log vacío, por lo que no encontraba Duration ni
+mostraba el error real. Se corrigió con SECURITY_ATTRIBUTES heredable y una
+entrada NUL válida. Además:
+
+• Si el contenedor no informa Duration, se hace un escaneo rápido con stream
+  copy y salida -progress.
+• Ante error se muestra código de salida y hasta 1800 caracteres del registro.
+• npm install comprueba que ffmpeg.exe realmente ejecute “-version”.
+
+PRUEBA REPETIBLE
+----------------
+En el equipo Windows instalado puede repetirse la regresión de formatos con:
+
+    npm run test:formats
+
+Genera temporalmente MP3 y M4A sintéticos de dos horas, valida los 18 bloques y
+borra sus archivos al terminar. No ejecuta Whisper ni mide la RX 5600 XT.
+
+LÍMITES DE LA VERIFICACIÓN
+--------------------------
+El sandbox de construcción es Linux y no contiene Windows ni una RX 5600 XT.
+Por ello, la herencia de handles Win32 se verificó por revisión y compilación,
+pero el hotfix debe confirmarse una vez en el equipo Windows real. Ningún
+software puede garantizar que todos los archivos arbitrarios estén intactos;
+VozLarga ahora informa el diagnóstico de FFmpeg y conserva checkpoints cuando
+una entrada está dañada, cifrada, incompleta o carece de pista de audio.

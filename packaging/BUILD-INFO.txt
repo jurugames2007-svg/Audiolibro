@@ -68,8 +68,10 @@ PIPELINE DE LA INTERFAZ
 • Bloques de hasta 900 s, paso de 898 s (2 s de solapamiento).
 • PCM WAV mono a 16 kHz para normalizar formatos.
 • Idioma fijado a español; salida TXT sin marcas de tiempo.
-• Silero VAD opcional.
-• Vulkan primero y reintento CPU del mismo bloque ante error.
+• Silero VAD opcional, desactivado por defecto y limitado a Vulkan; el respaldo
+  CPU lo omite para evitar la regresión de rendimiento medida en audio largo.
+• Vulkan primero, watchdog de 20 minutos por bloque y reintento CPU sin VAD
+  del mismo bloque ante error o timeout.
 • Checkpoint atómico después de verificar cada TXT de bloque.
 • Eliminación de texto repetido en el solapamiento mediante coincidencia de
   sufijo/prefijo de palabras.
@@ -82,9 +84,13 @@ VERIFICACIÓN REALIZADA EN EL ENTORNO DE CONSTRUCCIÓN
 • Inspección PE/COFF x64 y dependencias importadas: correcta.
 • whisper-vulkan.exe importa vulkan-1.dll; whisper-cpu.exe no la importa.
 • Los motores y la GUI no requieren libc++, libunwind ni DLL de ggml.
-• Hashes y tamaños de los modelos: verificados.
+• Silero VAD: tamaño y SHA-256 verificados localmente. Whisper Small: setup
+  exige tamaño y SHA-256 oficiales antes de aceptar la descarga.
+• Regresión con MP3 y M4A sintéticos de 2 horas: 9 bloques por archivo, 18 WAV
+  validados. Pipeline completo MP3 de 2 horas: 9/9 bloques y TXT final válidos.
+  Consulte TEST-RESULTS.txt.
 • Estructura portable y manifiesto: verificados.
-• Integridad del ZIP mediante listado, prueba CRC y SHA-256: verificada al
+• Integridad del ZIP mediante listado, prueba CRC y SHA-256: se verifica al
   generar la entrega.
 
 NO REALIZADO AQUÍ

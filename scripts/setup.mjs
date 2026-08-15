@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream, existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -27,7 +28,7 @@ const assets = [
 ];
 
 const runtimeFiles = [
-  ['VozLarga.exe', 'VozLarga.exe', 893440, '03b302b7a1b7850aba1fbeab5982fdbdbd8d1ec4e71c300403fd171c5424b8b2'],
+  ['VozLarga.exe', 'VozLarga.exe', 894976, '63834e0eab84ab8da487e768598c24a71bd6d4a1041044436592df1b215675f6'],
   ['engine/whisper-vulkan.exe', 'engine/whisper-vulkan.exe', 54074880, 'a71b5794f0ce6a7646294600bc55319574a5591eab36dba80c9bccae8429bf82'],
   ['engine/whisper-cpu.exe', 'engine/whisper-cpu.exe', 3145728, 'd3c3fa58dffbfde190731f140cff959de5dc9fc779423e0ff4d5b8164adc640e'],
 ];
@@ -177,7 +178,7 @@ async function main() {
 
   await copyTree(path.join(root, 'packaging', 'licenses'), path.join(portable, 'licenses'));
   await copyTree(path.join(root, 'src'), path.join(portable, 'source-gui'));
-  for (const name of ['LEEME.txt', 'BENCHMARK.txt', 'BUILD-INFO.txt']) {
+  for (const name of ['LEEME.txt', 'BENCHMARK.txt', 'BUILD-INFO.txt', 'TEST-RESULTS.txt']) {
     await copyFile(path.join(root, 'packaging', name), path.join(portable, name));
   }
 
@@ -188,7 +189,18 @@ async function main() {
     throw new Error('FFmpeg no está disponible. Ejecute npm install en Windows 10/11 x64 sin --omit=optional.');
   }
   await mkdir(path.join(portable, 'tools'), { recursive: true });
-  await copyFile(ffmpegSource, path.join(portable, 'tools', 'ffmpeg.exe'));
+  const ffmpegDestination = path.join(portable, 'tools', 'ffmpeg.exe');
+  await copyFile(ffmpegSource, ffmpegDestination);
+  const ffmpegTest = spawnSync(ffmpegDestination, ['-hide_banner', '-version'], {
+    cwd: portable,
+    encoding: 'utf8',
+    windowsHide: true,
+    timeout: 15000,
+  });
+  if (ffmpegTest.error || ffmpegTest.status !== 0 || !`${ffmpegTest.stdout || ''}${ffmpegTest.stderr || ''}`.includes('ffmpeg version')) {
+    throw new Error('FFmpeg no pudo ejecutarse en este Windows. Revise el antivirus o reinstale con npm install.');
+  }
+  console.log('✓ FFmpeg ejecutable verificado');
 
   for (const asset of assets) await downloadVerified(asset);
   await writeChecksums();

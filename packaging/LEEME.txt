@@ -55,10 +55,11 @@ lo publica mediante reemplazo atómico y solo entonces borra los temporales.
 
 SILERO VAD
 ----------
-Silero VAD está activado de forma predeterminada y puede acelerar archivos con
-silencios. Si el audio es música, ruido continuo o habla muy tenue, pruebe a
-desactivarlo. Cambiar VAD invalida el punto de control anterior para evitar
-mezclar resultados obtenidos con criterios distintos.
+Silero VAD es opcional y viene desactivado para priorizar la ejecución robusta
+de grabaciones largas. Puede acelerar archivos con silencios cuando Vulkan está
+funcionando. Si se activa el respaldo CPU, VozLarga desactiva VAD automáticamente
+porque su ruta CPU en whisper.cpp 1.9.2 puede ser extremadamente lenta. Cambiar
+VAD invalida el checkpoint anterior para no mezclar criterios distintos.
 
 PRIVACIDAD
 ----------
@@ -95,5 +96,7 @@ tools/ffmpeg.exe              Conversor multimedia local
 licenses/                     Licencias de terceros
 source-gui/                   Fuente C++17 de la interfaz
 
-Consulte BUILD-INFO.txt para versiones, limitaciones de verificación y detalles
-de compilación. Consulte CHECKSUMS-SHA256.txt para comprobar la extracción.
+Consulte BUILD-INFO.txt para versiones y detalles de compilación, y
+TEST-RESULTS.txt para las pruebas MP3/M4A de dos horas. Puede repetir la prueba
+de formatos con “npm run test:formats”. Consulte CHECKSUMS-SHA256.txt para
+comprobar la extracción.

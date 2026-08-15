@@ -167,7 +167,8 @@ std::wstring QuoteArg(const std::wstring &arg) {
     return out;
 }
 
-int RunProcess(const std::vector<std::wstring> &args, const std::wstring &logPath, bool cancellation = true) {
+int RunProcess(const std::vector<std::wstring> &args, const std::wstring &logPath, bool cancellation = true,
+               unsigned long long timeoutMs = 0) {
     if (args.empty()) return -1;
     // CreateProcess can only redirect handles that are explicitly inheritable.
     // Without SECURITY_ATTRIBUTES, FFmpeg starts with invalid stdout/stderr,
@@ -203,12 +204,20 @@ int RunProcess(const std::vector<std::wstring> &args, const std::wstring &logPat
         g_child = pi.hProcess;
     }
     DWORD wait = WAIT_TIMEOUT;
+    const unsigned long long processStart = GetTickCount64();
+    bool timedOut = false;
     while (wait == WAIT_TIMEOUT) {
         wait = WaitForSingleObject(pi.hProcess, 200);
         if (cancellation && g_cancelRequested.load()) TerminateProcess(pi.hProcess, 1223);
+        if (timeoutMs && GetTickCount64() - processStart > timeoutMs) {
+            timedOut = true;
+            PostLog(FileName(args.front()) + L" excedió el tiempo de seguridad y se detuvo para activar el respaldo.");
+            TerminateProcess(pi.hProcess, 1460);
+        }
     }
     DWORD exitCode = 1;
     GetExitCodeProcess(pi.hProcess, &exitCode);
+    if (timedOut) exitCode = 1460;
     {
         std::lock_guard<std::mutex> lock(g_childMutex);
         if (g_child == pi.hProcess) g_child = nullptr;
@@ -471,6 +480,8 @@ void Worker(Job job) {
     g_completed = cp.completed;
 
     bool useCpu = job.backend == BackendChoice::Cpu;
+    if (useCpu && job.vad)
+        PostLog(L"Silero VAD se desactiva en el motor CPU para evitar demoras extremas en audios largos.");
     unsigned long long totalTranscribeMs = 0; int measuredChunks = 0;
     for (int i = cp.completed; i < total; ++i) {
         if (g_cancelRequested) { FinishWorker(Stage::Cancelled, L"Cancelado. Los bloques terminados se conservan para reanudar."); return; }
@@ -494,17 +505,22 @@ void Worker(Job job) {
             args = {cpu ? cpuExe : vkExe, L"-m", model, L"-f", wav, L"-l", L"es", L"-t", std::to_wstring(job.threads),
                     L"-otxt", L"-of", outBase, L"-np", L"-nt", L"-sns"};
             if (cpu) args.push_back(L"-ng");
-            if (job.vad) { args.push_back(L"--vad"); args.push_back(L"-vm"); args.push_back(vadModel); }
+            // Silero's CPU path in whisper.cpp 1.9.2 can be slower than real
+            // time on long silence. Keep it on the accelerated Vulkan path;
+            // CPU fallback favors guaranteed completion without VAD.
+            if (job.vad && !cpu) { args.push_back(L"--vad"); args.push_back(L"-vm"); args.push_back(vadModel); }
         };
         makeArgs(useCpu);
         PostMessageW(g_main, WM_APP_STAGE, 100 + (useCpu ? 1 : 0), 0);
         SetStage(Stage::Transcribing, L"Transcribiendo bloque " + std::to_wstring(i + 1) + L" de " + std::to_wstring(total) + (useCpu ? L" con CPU…" : L" con Vulkan…"));
         unsigned long long before = GetTickCount64();
-        code = RunProcess(args, processLog);
+        constexpr unsigned long long VULKAN_BLOCK_TIMEOUT_MS = 20ULL * 60ULL * 1000ULL;
+        code = RunProcess(args, processLog, true, useCpu ? 0 : VULKAN_BLOCK_TIMEOUT_MS);
         unsigned long long spent = GetTickCount64() - before;
         if (g_cancelRequested) { DeleteFileW(WithLongPrefix(wav).c_str()); DeleteFileW(WithLongPrefix(txt).c_str()); FinishWorker(Stage::Cancelled, L"Cancelado. Los bloques terminados se conservan para reanudar."); return; }
         if ((!useCpu) && (code != 0 || !Exists(txt))) {
             PostLog(L"Vulkan no completó el bloque. Activando automáticamente el motor CPU independiente.");
+            if (job.vad) PostLog(L"Silero VAD se desactiva durante el respaldo CPU para asegurar el avance del audio largo.");
             useCpu = true; DeleteFileW(WithLongPrefix(txt).c_str()); makeArgs(true);
             PostMessageW(g_main, WM_APP_STAGE, 101, 0);
             before = GetTickCount64(); code = RunProcess(args, processLog); spent = GetTickCount64() - before;
@@ -667,7 +683,7 @@ LRESULT CALLBACK WndProc(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Automático (Vulkan → CPU)"));
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Vulkan (con respaldo CPU)"));
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Solo CPU")); SendMessageW(g_backend, CB_SETCURSEL, 0, 0);
-        g_vad = Make(w, L"BUTTON", L"Activar Silero VAD", BS_AUTOCHECKBOX, ID_VAD); SendMessageW(g_vad, BM_SETCHECK, BST_CHECKED, 0);
+        g_vad = Make(w, L"BUTTON", L"Silero VAD (solo Vulkan)", BS_AUTOCHECKBOX, ID_VAD); SendMessageW(g_vad, BM_SETCHECK, BST_UNCHECKED, 0);
         Make(w, L"STATIC", L"Hilos CPU", SS_LEFT, 9004);
         SYSTEM_INFO si{}; GetSystemInfo(&si); int threads = std::max<DWORD>(1, si.dwNumberOfProcessors > 2 ? si.dwNumberOfProcessors - 1 : si.dwNumberOfProcessors);
         g_threads = Make(w, L"EDIT", std::to_wstring(threads).c_str(), WS_BORDER | ES_NUMBER | ES_CENTER, ID_THREADS, WS_EX_CLIENTEDGE);

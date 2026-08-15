@@ -23,6 +23,7 @@
     "start": "node scripts/auto-start.mjs",
     "start:offline": "node scripts/start.mjs",
     "update": "node scripts/update.mjs",
+    "test:formats": "node scripts/test-formats.mjs",
     "verify": "node scripts/verify.mjs",
     "portable:zip": "node scripts/zip.mjs"
   },
