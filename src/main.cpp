@@ -169,23 +169,34 @@ std::wstring QuoteArg(const std::wstring &arg) {
 
 int RunProcess(const std::vector<std::wstring> &args, const std::wstring &logPath, bool cancellation = true) {
     if (args.empty()) return -1;
+    // CreateProcess can only redirect handles that are explicitly inheritable.
+    // Without SECURITY_ATTRIBUTES, FFmpeg starts with invalid stdout/stderr,
+    // producing an empty log and hiding both Duration and diagnostic errors.
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
     HANDLE log = CreateFileW(WithLongPrefix(logPath).c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+                             &sa, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (log == INVALID_HANDLE_VALUE) {
         PostLog(L"No se pudo crear el registro del proceso: " + WinError());
         return -1;
     }
+    HANDLE nullInput = CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     std::wstring cmd;
     for (const auto &a : args) { if (!cmd.empty()) cmd.push_back(L' '); cmd += QuoteArg(a); }
     std::vector<wchar_t> mutableCmd(cmd.begin(), cmd.end());
     mutableCmd.push_back(0);
     STARTUPINFOW si{}; si.cb = sizeof(si); si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE; si.hStdOutput = log; si.hStdError = log; si.hStdInput = nullptr;
+    si.wShowWindow = SW_HIDE; si.hStdOutput = log; si.hStdError = log;
+    si.hStdInput = nullInput != INVALID_HANDLE_VALUE ? nullInput : GetStdHandle(STD_INPUT_HANDLE);
     PROCESS_INFORMATION pi{};
     BOOL ok = CreateProcessW(nullptr, mutableCmd.data(), nullptr, nullptr, TRUE,
                              CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr, g_moduleDir.c_str(), &si, &pi);
+    DWORD createError = ok ? ERROR_SUCCESS : GetLastError();
     CloseHandle(log);
-    if (!ok) { PostLog(L"No se pudo iniciar " + FileName(args.front()) + L": " + WinError()); return -1; }
+    if (nullInput != INVALID_HANDLE_VALUE) CloseHandle(nullInput);
+    if (!ok) { PostLog(L"No se pudo iniciar " + FileName(args.front()) + L": " + WinError(createError)); return -1; }
     CloseHandle(pi.hThread);
     {
         std::lock_guard<std::mutex> lock(g_childMutex);
@@ -430,6 +441,7 @@ void Worker(Job job) {
         if (g_cancelRequested) { FinishWorker(Stage::Cancelled, L"Cancelado. El punto de control válido se conserva."); return; }
         duration = ParseDuration(processLog);
         if (scan != 0 || !(duration > 0.0) || !std::isfinite(duration)) {
+            PostLog(L"FFmpeg terminó con código " + std::to_wstring(scan) + L".");
             PostLog(L"Detalle de FFmpeg:\r\n" + ProcessLogTail(processLog));
             FinishWorker(Stage::Failed, L"FFmpeg no pudo leer una pista de audio válida. Revise el detalle mostrado y compruebe que el archivo no esté vacío, incompleto o protegido.");
             return;

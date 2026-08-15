@@ -5,6 +5,15 @@
   "description": "Transcripción local de grabaciones extensas en Windows 10 x64 con Vulkan y respaldo CPU",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jurugames2007-svg/Audiolibro.git"
+  },
+  "vozlarga": {
+    "updateOwner": "jurugames2007-svg",
+    "updateRepo": "Audiolibro",
+    "updateBranch": "arena/01a006c1-audiolibro"
+  },
   "engines": {
     "node": ">=18"
   },

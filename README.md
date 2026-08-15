@@ -19,7 +19,10 @@ npm install
 npm start
 ```
 
-`npm install` prepara `VozLarga-PC-1.0/`, instala FFmpeg y descarga una sola vez los modelos oficiales, verificando tamaño y SHA-256. Después, la transcripción es completamente local. Al ejecutar `npm start`, el lanzador consulta el repositorio y aplica únicamente cambios nuevos mediante avance rápido de Git. **No elimina ni vuelve a descargar** modelos válidos, checkpoints o transcripciones.
+`npm install` prepara `VozLarga-PC-1.0/`, instala FFmpeg y descarga una sola vez los modelos oficiales, verificando tamaño y SHA-256. Después, la transcripción es completamente local. Al ejecutar `npm start`, el lanzador consulta el repositorio y **no elimina ni vuelve a descargar** modelos válidos, checkpoints o transcripciones.
+
+- En un clon Git aplica únicamente cambios nuevos mediante avance rápido.
+- En una copia descargada como ZIP consulta la revisión de GitHub y sincroniza los archivos administrados del proyecto; nunca toca `VozLarga-PC-1.0/` ni `node_modules/`.
 
 Inicio sin consultar actualizaciones:
 
@@ -34,7 +37,7 @@ npm run update
 npm run setup
 ```
 
-El auto-update se omite si hay cambios locales en archivos versionados, si el proyecto no es un clon Git o si no hay conexión. En esos casos se abre la versión instalada. También puede desactivarse definiendo `VOZLARGA_NO_UPDATE=1`.
+En clones Git, el auto-update se omite si hay cambios locales o ramas divergentes. Sin conexión siempre se abre la versión instalada. También puede desactivarse definiendo `VOZLARGA_NO_UPDATE=1`.
 
 Comprobación integral y ZIP opcional:
 

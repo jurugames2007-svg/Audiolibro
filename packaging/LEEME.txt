@@ -9,9 +9,10 @@ INICIO RÁPIDO
 Opción A — repositorio con Node.js 18 o posterior:
 1. En Windows x64, ejecute “npm install”. Esto prepara el portable y descarga
    una sola vez los modelos oficiales, verificando su SHA-256.
-2. Ejecute “npm start”. Antes de abrir, comprueba si hay cambios nuevos en la
-   misma rama Git y actualiza solo esos archivos. Conserva modelos, checkpoints
-   y transcripciones. El procesamiento de audio continúa siendo local.
+2. Ejecute “npm start”. Antes de abrir, comprueba si hay cambios nuevos. En un
+   clon Git usa avance rápido; en una descarga ZIP sincroniza los archivos
+   administrados desde GitHub. Conserva modelos, checkpoints y transcripciones.
+   El procesamiento de audio continúa siendo local.
 3. Para iniciar sin comprobar el repositorio use “npm run start:offline”.
    También puede ejecutar “npm run update” manualmente.
 

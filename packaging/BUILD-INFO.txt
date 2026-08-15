@@ -51,13 +51,15 @@ FFmpeg
 
 AUTO-UPDATE DEL PROYECTO NPM
 ----------------------------
-• “npm start” ejecuta git fetch sobre la rama actual y solo permite avance
-  rápido; nunca fuerza, resetea ni sobrescribe cambios locales.
+• En clones, “npm start” ejecuta git fetch sobre la rama actual y solo permite
+  avance rápido; nunca fuerza, resetea ni sobrescribe cambios locales.
+• En copias ZIP consulta la revisión por la API de GitHub y sincroniza un ZIP de
+  fuentes administradas sin tocar VozLarga-PC-1.0 ni node_modules.
 • Tras una actualización sincroniza npm sin postinstall recursivo y ejecuta
   setup incremental.
-• Los modelos con tamaño y SHA-256 válidos se reutilizan. La carpeta portable,
-  checkpoints, audios y transcripciones están ignorados por Git y se conservan.
-• Sin red, sin Git, en un ZIP o con una rama divergente, inicia la versión local.
+• Los modelos con tamaño y SHA-256 válidos se reutilizan. Checkpoints, audios y
+  transcripciones se conservan.
+• Sin red o con una rama Git divergente, inicia la versión local.
 • “npm run start:offline” omite completamente la comprobación de red.
 
 PIPELINE DE LA INTERFAZ
