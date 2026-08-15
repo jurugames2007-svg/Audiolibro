@@ -75,13 +75,9 @@ async function main() {
     return;
   }
 
-  const remoteRef = `origin/${branch}`;
-  const remoteExists = run('git', ['rev-parse', '--verify', '--quiet', remoteRef]);
-  if (remoteExists.status !== 0) {
-    fail(`no existe ${remoteRef}.`);
-    return;
-  }
-
+  // A single-branch clone may not create origin/<branch> as a remote-tracking
+  // ref. FETCH_HEAD always points at the exact branch fetched above.
+  const remoteRef = 'FETCH_HEAD';
   const behindResult = run('git', ['rev-list', '--count', `HEAD..${remoteRef}`]);
   const behind = Number(behindResult.stdout?.trim() || 0);
   if (behindResult.status !== 0 || !Number.isFinite(behind)) {
