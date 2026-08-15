@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <cwchar>
 #include <fstream>
 #include <iomanip>
@@ -339,10 +340,39 @@ bool SaveCheckpoint(const std::wstring &path, const Checkpoint &c) {
 double ParseDuration(const std::wstring &logPath) {
     std::string s; if (!ReadBytes(logPath, s)) return 0;
     size_t p = s.find("Duration:");
-    if (p == std::string::npos) return 0;
-    int h = 0, m = 0; double sec = 0;
-    if (sscanf(s.c_str() + p, "Duration: %d:%d:%lf", &h, &m, &sec) != 3) return 0;
-    return h * 3600.0 + m * 60.0 + sec;
+    if (p != std::string::npos) {
+        int h = 0, m = 0; double sec = 0;
+        if (sscanf(s.c_str() + p, "Duration: %d:%d:%lf", &h, &m, &sec) == 3)
+            return h * 3600.0 + m * 60.0 + sec;
+    }
+    // Fallback output produced by FFmpeg's machine-readable -progress mode.
+    // In older FFmpeg releases out_time_ms is expressed in microseconds.
+    for (const char *key : {"out_time_us=", "out_time_ms="}) {
+        p = s.rfind(key);
+        if (p != std::string::npos) {
+            const char *value = s.c_str() + p + strlen(key);
+            unsigned long long us = _strtoui64(value, nullptr, 10);
+            if (us > 0) return static_cast<double>(us) / 1000000.0;
+        }
+    }
+    for (const char *key : {"out_time=", "time="}) {
+        p = s.rfind(key);
+        if (p != std::string::npos) {
+            int h = 0, m = 0; double sec = 0;
+            if (sscanf(s.c_str() + p + strlen(key), "%d:%d:%lf", &h, &m, &sec) == 3)
+                return h * 3600.0 + m * 60.0 + sec;
+        }
+    }
+    return 0;
+}
+std::wstring ProcessLogTail(const std::wstring &logPath) {
+    std::string bytes;
+    if (!ReadBytes(logPath, bytes) || bytes.empty()) return L"(FFmpeg no produjo detalles)";
+    std::wstring text = FromUtf8(bytes);
+    while (!text.empty() && (text.back() == L'\r' || text.back() == L'\n' || text.back() == L' ')) text.pop_back();
+    constexpr size_t limit = 1800;
+    if (text.size() > limit) text = L"…" + text.substr(text.size() - limit);
+    return text;
 }
 
 bool ValidateRuntime(const Job &job, std::wstring &error) {
@@ -387,9 +417,24 @@ void Worker(Job job) {
     PostLog(L"Archivo: " + job.input);
     int probe = RunProcess({ffmpeg, L"-hide_banner", L"-i", job.input}, processLog);
     if (g_cancelRequested) { FinishWorker(Stage::Cancelled, L"Cancelado. El punto de control válido se conserva."); return; }
-    (void)probe;
+    (void)probe; // FFmpeg normally returns 1 when -i is used only to inspect metadata.
     double duration = ParseDuration(processLog);
-    if (!(duration > 0.0) || !std::isfinite(duration)) { FinishWorker(Stage::Failed, L"FFmpeg no pudo determinar la duración. Compruebe que el archivo contenga audio compatible."); return; }
+    if (!(duration > 0.0) || !std::isfinite(duration)) {
+        // Some MP3 encoders and streamed containers do not publish Duration in
+        // their header. Scan the first audio stream with stream copy: this is
+        // much faster than decoding and gives us a machine-readable end time.
+        PostLog(L"El contenedor no informó la duración; realizando un análisis rápido de la pista de audio…");
+        int scan = RunProcess({ffmpeg, L"-hide_banner", L"-loglevel", L"error", L"-nostats",
+                               L"-progress", L"pipe:1", L"-i", job.input, L"-map", L"0:a:0",
+                               L"-vn", L"-sn", L"-dn", L"-c:a", L"copy", L"-f", L"null", L"NUL"}, processLog);
+        if (g_cancelRequested) { FinishWorker(Stage::Cancelled, L"Cancelado. El punto de control válido se conserva."); return; }
+        duration = ParseDuration(processLog);
+        if (scan != 0 || !(duration > 0.0) || !std::isfinite(duration)) {
+            PostLog(L"Detalle de FFmpeg:\r\n" + ProcessLogTail(processLog));
+            FinishWorker(Stage::Failed, L"FFmpeg no pudo leer una pista de audio válida. Revise el detalle mostrado y compruebe que el archivo no esté vacío, incompleto o protegido.");
+            return;
+        }
+    }
     int total = std::max(1, static_cast<int>(std::ceil(std::max(0.0, duration - OVERLAP_SECONDS) / STEP_SECONDS)));
     g_total = total;
     PostLog(L"Duración: " + FormatClock(static_cast<unsigned long long>(duration * 1000)) + L". Bloques: " + std::to_wstring(total) + L".");
