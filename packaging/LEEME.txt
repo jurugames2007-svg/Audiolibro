@@ -1,0 +1,88 @@
+VOZLARGA PC 1.0 — PORTABLE PARA WINDOWS 10 x64
+================================================
+
+VozLarga transcribe grabaciones extensas en español sin enviar audio ni texto
+a Internet. No usa API, cuenta, servidor, nube ni instalador.
+
+INICIO RÁPIDO
+-------------
+1. Extraiga TODO el contenido del ZIP. No ejecute VozLarga.exe dentro del ZIP.
+2. Mantenga juntas las carpetas engine, tools y models.
+3. Instale o actualice el controlador AMD Radeon oficial de su RX 5600 XT.
+   El controlador debe incluir Vulkan.
+4. Ejecute VozLarga.exe.
+5. Seleccione el audio o vídeo, el TXT de salida y pulse Iniciar.
+
+MOTOR
+-----
+• Automático (recomendado): intenta Vulkan y, si no puede completar un bloque,
+  repite ese bloque con el motor CPU independiente.
+• Vulkan: da prioridad a la GPU, pero conserva el respaldo CPU automático.
+• Solo CPU: no carga Vulkan.
+
+No se incluye vulkan-1.dll: Windows usa el cargador instalado por el controlador
+de la tarjeta gráfica. No copie DLL de Vulkan de sitios de terceros.
+
+ARCHIVOS ADMITIDOS
+------------------
+FFmpeg local convierte, entre otros: MP3, M4A/AAC, WAV, FLAC, OGG/Opus, MP4,
+MKV, WebM, MOV y AVI. La pista se normaliza a PCM mono, 16 kHz, por bloques.
+
+TRABAJOS LARGOS, PAUSA Y REANUDACIÓN
+------------------------------------
+• Cada bloque dura hasta 15 minutos y se solapa 2 segundos con el siguiente.
+• Pausar espera a que termine el bloque actual, guarda un punto de control y se
+  detiene. Esto evita dejar resultados parciales corruptos.
+• Cancelar detiene el proceso actual y conserva los bloques ya verificados.
+• Pulse Reanudar para continuar. Se valida la identidad del archivo de entrada.
+• No mueva ni modifique la entrada mientras exista un trabajo pendiente.
+
+Durante el trabajo puede aparecer, junto al TXT elegido, una carpeta con sufijo
+“.vozlarga-work”. Contiene el punto de control, los textos por bloque y
+proceso.log. Al terminar, VozLarga consolida un único TXT UTF-8, lo verifica,
+lo publica mediante reemplazo atómico y solo entonces borra los temporales.
+
+SILERO VAD
+----------
+Silero VAD está activado de forma predeterminada y puede acelerar archivos con
+silencios. Si el audio es música, ruido continuo o habla muy tenue, pruebe a
+desactivarlo. Cambiar VAD invalida el punto de control anterior para evitar
+mezclar resultados obtenidos con criterios distintos.
+
+PRIVACIDAD
+----------
+El programa no contiene código de red. VozLarga.exe solo inicia los ejecutables
+locales incluidos. FFmpeg, whisper.cpp y los modelos trabajan en este equipo.
+
+RENDIMIENTO
+-----------
+El objetivo solicitado es procesar 2 horas en menos de 20 minutos (al menos 6x
+tiempo real, RTF <= 0,167). No se garantiza: depende del audio, el VAD, la CPU,
+el controlador y la RX 5600 XT. Consulte BENCHMARK.txt y mida en el equipo real.
+
+SOLUCIÓN DE PROBLEMAS
+---------------------
+• “Falta…” o “modelo dañado”: vuelva a extraer el ZIP completo y no cambie los
+  nombres de archivos.
+• Vulkan falla y aparece “Motor actual: CPU”: actualice AMD Software: Adrenalin
+  Edition y reinicie. El TXT seguirá procesándose con CPU.
+• FFmpeg no reconoce el archivo: compruebe que no esté cifrado/protegido y que
+  contenga una pista de audio válida.
+• Falta espacio: deje espacio para WAV temporal (aprox. 30 MB por bloque) y para
+  el TXT. Los WAV se borran tras verificar cada bloque.
+• Para diagnóstico, abra proceso.log dentro de la carpeta .vozlarga-work antes
+  de reintentar o finalizar.
+
+CONTENIDO
+---------
+VozLarga.exe                  Interfaz y coordinador Win32
+engine/whisper-vulkan.exe     whisper.cpp 1.9.2 con backend Vulkan
+engine/whisper-cpu.exe        whisper.cpp 1.9.2 solo CPU
+models/ggml-small-q5_1.bin    Whisper Small multilingüe Q5_1
+models/ggml-silero-v6.2.0.bin Silero VAD opcional
+tools/ffmpeg.exe              Conversor multimedia local
+licenses/                     Licencias de terceros
+source-gui/                   Fuente C++17 de la interfaz
+
+Consulte BUILD-INFO.txt para versiones, limitaciones de verificación y detalles
+de compilación. Consulte CHECKSUMS-SHA256.txt para comprobar la extracción.

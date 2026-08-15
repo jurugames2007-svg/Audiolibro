@@ -1,0 +1,82 @@
+VOZLARGA PC 1.0 — INFORMACIÓN DE CONSTRUCCIÓN
+==============================================
+Fecha de reconstrucción: 2026-08-15 (UTC)
+Destino: Windows 10 x64, UCRT, subsistema gráfico Win32
+Arquitectura mínima de los binarios propios: x86-64-v2
+
+COMPONENTES
+-----------
+Interfaz VozLarga
+  Lenguaje: C++17 / API Win32 Unicode
+  Compilador: Zig 0.15.1, frontend Clang 20.1.2, destino x86_64-windows-gnu
+  Enlace: runtime C/C++ estático; solo DLL del sistema Windows
+  Manifest: asInvoker, Common Controls 6, PerMonitorV2, longPathAware
+
+Motores de transcripción
+  Proyecto: whisper.cpp v1.9.2
+  Fuente: https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v1.9.2.tar.gz
+  CPU: GGML_VULKAN=OFF, GGML_NATIVE=OFF, GGML_OPENMP=OFF, Release -O3
+  Vulkan: GGML_VULKAN=ON, loader dinámico del sistema vulkan-1.dll,
+           shaders SPIR-V incrustados, Vulkan Headers 1.4.360
+  Ambos: ejecutables independientes, bibliotecas whisper/ggml enlazadas de
+         forma estática, UCRT, x86-64-v2
+  El motor Vulkan conserva las operaciones CPU que whisper.cpp necesita; el
+  motor whisper-cpu.exe no contiene backend Vulkan.
+
+Compilación de shaders
+  glslc: shaderc v2025.3 compilado localmente
+  SPIRV-Headers y Vulkan-Headers: rama principal fijada durante la construcción
+  Import library de vulkan-1.dll generada desde Vulkan-Loader/vulkan-1.def
+
+Modelos
+  Whisper Small multilingüe Q5_1
+  Archivo: ggml-small-q5_1.bin
+  Tamaño: 190085487 bytes
+  SHA-256: ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb
+
+  Silero VAD 6.2.0
+  Archivo: ggml-silero-v6.2.0.bin
+  Tamaño: 885098 bytes
+  SHA-256: 2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987
+  Conversión reproducida con el conversor oficial de whisper.cpp v1.9.2 y
+  silero-vad 6.2.0; el resultado coincide byte por byte con el hash oficial.
+
+FFmpeg
+  Binario portable Windows x64: FFmpeg 7.1 distribuido por imageio-ffmpeg 0.6.0
+  Rueda: imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl
+  Archivo original: ffmpeg-win-x86_64-v7.1.exe
+  Se invoca como proceso separado y se puede sustituir por otro ffmpeg.exe
+  compatible. Licencias y avisos están en licenses/.
+
+PIPELINE DE LA INTERFAZ
+-----------------------
+• Sondeo local de duración con FFmpeg.
+• Bloques de hasta 900 s, paso de 898 s (2 s de solapamiento).
+• PCM WAV mono a 16 kHz para normalizar formatos.
+• Idioma fijado a español; salida TXT sin marcas de tiempo.
+• Silero VAD opcional.
+• Vulkan primero y reintento CPU del mismo bloque ante error.
+• Checkpoint atómico después de verificar cada TXT de bloque.
+• Eliminación de texto repetido en el solapamiento mediante coincidencia de
+  sufijo/prefijo de palabras.
+• Consolidación UTF-8, escritura temporal duradera, lectura de verificación,
+  reemplazo final atómico y borrado posterior de temporales.
+
+VERIFICACIÓN REALIZADA EN EL ENTORNO DE CONSTRUCCIÓN
+-----------------------------------------------------
+• Compilación Release completa de ambos motores y de la GUI: correcta.
+• Inspección PE/COFF x64 y dependencias importadas: correcta.
+• whisper-vulkan.exe importa vulkan-1.dll; whisper-cpu.exe no la importa.
+• Los motores y la GUI no requieren libc++, libunwind ni DLL de ggml.
+• Hashes y tamaños de los modelos: verificados.
+• Estructura portable y manifiesto: verificados.
+• Integridad del ZIP mediante listado, prueba CRC y SHA-256: verificada al
+  generar la entrega.
+
+NO REALIZADO AQUÍ
+-----------------
+Este entorno Linux no dispone de Windows, controlador AMD ni una RX 5600 XT.
+Por tanto no se ejecutó un benchmark real, no se validó el diálogo gráfico en
+Windows físico y no se garantiza el objetivo de velocidad. La primera prueba
+debe hacerse según BENCHMARK.txt. El respaldo CPU está incluido para cubrir un
+fallo de inicialización o ejecución Vulkan.
