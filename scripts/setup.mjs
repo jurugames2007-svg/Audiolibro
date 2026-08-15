@@ -181,6 +181,8 @@ async function main() {
   for (const name of ['LEEME.txt', 'BENCHMARK.txt', 'BUILD-INFO.txt', 'TEST-RESULTS.txt']) {
     await copyFile(path.join(root, 'packaging', name), path.join(portable, name));
   }
+  await copyFile(path.join(root, 'evaluation', 'EVALUACION-VOZLARGA-10-10.xlsx'),
+                 path.join(portable, 'EVALUACION-VOZLARGA-10-10.xlsx'));
 
   const ffmpegSource = path.join(root, 'node_modules', '@ffmpeg-installer', 'win32-x64', 'ffmpeg.exe');
   const ffmpegSize = 64458752;

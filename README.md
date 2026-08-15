@@ -54,7 +54,14 @@ npm run portable:zip
 ```
 
 `npm run test:formats` genera temporalmente MP3 y M4A sintéticos de dos horas,
-valida sus 18 bloques PCM y los elimina al terminar.
+valida sus 18 bloques PCM y los elimina al terminar. Para calcular WER con una
+referencia humana:
+
+```powershell
+npm run evaluate:wer -- referencia.txt transcripcion.txt resultados-wer.csv
+```
+
+La evaluación auditable está en `evaluation/EVALUACION-VOZLARGA-10-10.xlsx`.
 
 El ZIP resultante se llama `VozLarga-PC-1.0-Windows-x64.zip`.
 
