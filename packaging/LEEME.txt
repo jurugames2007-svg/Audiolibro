@@ -6,6 +6,12 @@ a Internet. No usa API, cuenta, servidor, nube ni instalador.
 
 INICIO RÁPIDO
 -------------
+Opción A — repositorio con Node.js 18 o posterior:
+1. En Windows x64, ejecute “npm install”. Esto prepara el portable y descarga
+   una sola vez los modelos oficiales, verificando su SHA-256.
+2. Ejecute “npm start”. Después de la instalación, el procesamiento es local.
+
+Opción B — ZIP ya creado:
 1. Extraiga TODO el contenido del ZIP. No ejecute VozLarga.exe dentro del ZIP.
 2. Mantenga juntas las carpetas engine, tools y models.
 3. Instale o actualice el controlador AMD Radeon oficial de su RX 5600 XT.

@@ -1,5 +1,6 @@
 # Local cross-compilation and downloaded dependencies
 /build/
+/node_modules/
 /VozLarga-PC-1.0/
 /VozLarga-PC-1.0-Windows-x64.zip
 

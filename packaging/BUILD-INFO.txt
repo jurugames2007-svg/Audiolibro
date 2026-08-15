@@ -42,9 +42,10 @@ Modelos
   silero-vad 6.2.0; el resultado coincide byte por byte con el hash oficial.
 
 FFmpeg
-  Binario portable Windows x64: FFmpeg 7.1 distribuido por imageio-ffmpeg 0.6.0
-  Rueda: imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl
-  Archivo original: ffmpeg-win-x86_64-v7.1.exe
+  Binario portable Windows x64: FFmpeg 4.1, compilación 20181217-f22fcd4
+  Paquete npm: @ffmpeg-installer/win32-x64 4.1.0
+  Tamaño: 64458752 bytes
+  SHA-256: c8abc49e7be62dde8e12972af373959e0076a7b8dc8040eb45978e0608f8781e
   Se invoca como proceso separado y se puede sustituir por otro ffmpeg.exe
   compatible. Licencias y avisos están en licenses/.
 

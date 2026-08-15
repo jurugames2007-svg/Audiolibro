@@ -1,0 +1,21 @@
+{
+  "name": "vozlarga-pc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transcripción local de grabaciones extensas en Windows 10 x64 con Vulkan y respaldo CPU",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "postinstall": "node scripts/setup.mjs",
+    "setup": "node scripts/setup.mjs",
+    "start": "node scripts/start.mjs",
+    "verify": "node scripts/verify.mjs",
+    "portable:zip": "node scripts/zip.mjs"
+  },
+  "optionalDependencies": {
+    "@ffmpeg-installer/win32-x64": "4.1.0"
+  }
+}
