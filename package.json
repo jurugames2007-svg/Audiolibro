@@ -11,7 +11,9 @@
   "scripts": {
     "postinstall": "node scripts/setup.mjs",
     "setup": "node scripts/setup.mjs",
-    "start": "node scripts/start.mjs",
+    "start": "node scripts/auto-start.mjs",
+    "start:offline": "node scripts/start.mjs",
+    "update": "node scripts/update.mjs",
     "verify": "node scripts/verify.mjs",
     "portable:zip": "node scripts/zip.mjs"
   },

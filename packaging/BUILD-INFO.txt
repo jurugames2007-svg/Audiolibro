@@ -49,6 +49,17 @@ FFmpeg
   Se invoca como proceso separado y se puede sustituir por otro ffmpeg.exe
   compatible. Licencias y avisos están en licenses/.
 
+AUTO-UPDATE DEL PROYECTO NPM
+----------------------------
+• “npm start” ejecuta git fetch sobre la rama actual y solo permite avance
+  rápido; nunca fuerza, resetea ni sobrescribe cambios locales.
+• Tras una actualización sincroniza npm sin postinstall recursivo y ejecuta
+  setup incremental.
+• Los modelos con tamaño y SHA-256 válidos se reutilizan. La carpeta portable,
+  checkpoints, audios y transcripciones están ignorados por Git y se conservan.
+• Sin red, sin Git, en un ZIP o con una rama divergente, inicia la versión local.
+• “npm run start:offline” omite completamente la comprobación de red.
+
 PIPELINE DE LA INTERFAZ
 -----------------------
 • Sondeo local de duración con FFmpeg.

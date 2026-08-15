@@ -19,13 +19,22 @@ npm install
 npm start
 ```
 
-`npm install` prepara `VozLarga-PC-1.0/`, instala FFmpeg y descarga una sola vez los modelos oficiales, verificando tamaño y SHA-256. Después, la transcripción y el uso normal mediante `npm start` son totalmente locales y no necesitan conexión.
+`npm install` prepara `VozLarga-PC-1.0/`, instala FFmpeg y descarga una sola vez los modelos oficiales, verificando tamaño y SHA-256. Después, la transcripción es completamente local. Al ejecutar `npm start`, el lanzador consulta el repositorio y aplica únicamente cambios nuevos mediante avance rápido de Git. **No elimina ni vuelve a descargar** modelos válidos, checkpoints o transcripciones.
 
-Si una descarga se interrumpe, repita:
+Inicio sin consultar actualizaciones:
 
 ```powershell
+npm run start:offline
+```
+
+Actualización manual o reparación de la instalación:
+
+```powershell
+npm run update
 npm run setup
 ```
+
+El auto-update se omite si hay cambios locales en archivos versionados, si el proyecto no es un clon Git o si no hay conexión. En esos casos se abre la versión instalada. También puede desactivarse definiendo `VOZLARGA_NO_UPDATE=1`.
 
 Comprobación integral y ZIP opcional:
 
