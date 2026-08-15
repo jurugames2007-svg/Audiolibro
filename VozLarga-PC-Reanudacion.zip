@@ -1,0 +1,102 @@
+# Handoff: VozLarga PC 1.0 portable
+
+## Instrucción para la nueva sesión
+
+Lee este archivo y los fuentes de `src/`. Continúa sin cambiar el alcance: reconstruye, verifica y entrega `VozLarga-PC-1.0-Windows-x64.zip` mediante `present_file`. No prometas el rendimiento hasta probarlo en la RX 5600 XT real.
+
+## Solicitud del usuario
+
+Crear una aplicación de escritorio **portable para Windows 10 x64**, completamente local, para transcribir grabaciones extensas en español.
+
+Requisitos:
+
+- Sin API, cuenta, backend, nube ni conexión a Internet.
+- GPU objetivo: **AMD Radeon RX 5600 XT mediante Vulkan**.
+- Motor CPU independiente como respaldo automático.
+- Whisper multilingüe para español, buscando equilibrio entre precisión y velocidad.
+- Modelo elegido: **Whisper Small multilingüe Q5_1**.
+- Silero VAD opcional para acelerar audio con silencios.
+- FFmpeg local para MP3, M4A/AAC, WAV, FLAC, OGG/Opus, MP4, MKV, WebM, MOV, AVI, etc.
+- Progreso global, tiempo transcurrido, ETA y backend.
+- Pausar/reanudar mediante checkpoints.
+- Procesamiento por bloques de 15 minutos con 2 segundos de solapamiento.
+- Un único TXT UTF-8 consolidado.
+- Escritura final atómica; verificar el TXT y después borrar temporales.
+- Objetivo deseado: 2 horas en menos de 20 minutos (>=6x tiempo real o RTF <=0,167), pero **no garantizarlo sin benchmark real**.
+- Sin instalador: extraer ZIP y ejecutar `VozLarga.exe`.
+
+## Fuente GUI ya terminada
+
+Los archivos adjuntos en `src/` son la versión final:
+
+- `main.cpp`: GUI Win32 C++17 y pipeline completo.
+- `resources.rc`: icono, manifest y versión.
+- `app.manifest`: asInvoker, Common Controls 6, PerMonitorV2 y longPathAware.
+- `vozlarga.ico`: icono multirresolución.
+
+La GUI espera exactamente esta estructura:
+
+```text
+VozLarga-PC-1.0/
+  VozLarga.exe
+  libc++.dll
+  libunwind.dll
+  engine/
+    whisper-vulkan.exe
+    whisper-cpu.exe
+    libc++.dll
+    libunwind.dll
+  tools/
+    ffmpeg.exe
+  models/
+    ggml-small-q5_1.bin
+    ggml-silero-v6.2.0.bin
+  licenses/
+  source-gui/
+  LEEME.txt
+  BENCHMARK.txt
+  BUILD-INFO.txt
+  CHECKSUMS-SHA256.txt
+```
+
+## Versiones y descargas reproducibles
+
+- whisper.cpp v1.9.2:
+  `https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v1.9.2.tar.gz`
+- LLVM-MinGW 20260616 UCRT Linux host:
+  `https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-ucrt-ubuntu-22.04-x86_64.tar.xz`
+  SHA-256: `534b92e067b22a6b4441f48ae9240a3341b17825d04d577eab0cf85c44b4deda`
+- CMake 4.4.2 y Ninja 1.13.0 pueden instalarse con pip en una carpeta temporal.
+- LunarG Vulkan SDK Linux 1.4.357.1 (para `glslc`, headers y CMake):
+  `https://sdk.lunarg.com/sdk/download/1.4.357.1/linux/vulkan_sdk.tar.xz`
+- Definición del loader Windows:
+  `https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/main/loader/vulkan-1.def`
+- FFmpeg Windows x64 LGPL 8.1 BtbN:
+  `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-win64-lgpl-8.1.zip`
+- Whisper Small Q5_1:
+  `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin?download=true`
+  SHA-256: `ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb`
+- Silero VAD 6.2.0:
+  `https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v6.2.0.bin?download=true`
+  SHA-256: `2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987`
+
+## Construcción Windows
+
+### Toolchain CMake
+
+Usar LLVM-MinGW UCRT, `CMAKE_SYSTEM_NAME Windows`, arquitectura x86_64, compiladores `x86_64-w64-mingw32-clang` y `clang++`, y `x86_64-w64-mingw32-windres`.
+
+Crear la import library Vulkan con:
+
+```bash
+llvm-dlltool -m i386:x86-64 -d vulkan-1.def \
+  -l libvulkan-1.dll.a -D vulkan-1.dll
+```
+
+### Motor CPU
+
+Configurar whisper.cpp con:
+
+```text
+CMAKE_BUILD_TYPE=Release
+C flags: -O3 -DNDEBUG
