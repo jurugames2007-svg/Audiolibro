@@ -1,0 +1,52 @@
+BENCHMARK DE VOZLARGA PC 1.0
+============================
+
+IMPORTANTE
+----------
+El rendimiento no se ha medido en la RX 5600 XT física del destinatario. El
+objetivo de 2 horas en menos de 20 minutos (>=6x tiempo real, RTF <=0,167) es
+un objetivo, no una promesa.
+
+PRUEBA RECOMENDADA
+------------------
+1. Actualice el controlador AMD y reinicie Windows.
+2. Cierre juegos, editores de vídeo y aplicaciones que usen la GPU.
+3. Use un archivo representativo de al menos 30 minutos.
+4. Seleccione “Automático (Vulkan → CPU)” y mantenga Silero VAD según el tipo
+   de grabación que vaya a procesar normalmente.
+5. Anote la duración del archivo y el tiempo “Transcurrido” al terminar.
+6. Repita una vez para reducir el efecto de cachés y tareas de fondo.
+
+CÁLCULOS
+--------
+RTF = tiempo de proceso / duración del audio
+Velocidad en tiempo real = duración del audio / tiempo de proceso
+
+Ejemplo exclusivamente matemático:
+Audio: 120 min; proceso: 20 min -> RTF 0,167; velocidad 6,0x.
+
+PLANTILLA
+---------
+Fecha:
+Windows (compilación):
+Versión del controlador AMD:
+GPU:
+CPU:
+RAM:
+Formato y duración del archivo:
+Silero VAD (sí/no):
+Motor mostrado al terminar (Vulkan/CPU):
+Tiempo total:
+RTF:
+Velocidad:
+Observaciones:
+
+COMPROBACIÓN DEL MOTOR
+----------------------
+La interfaz muestra “Motor actual: Vulkan” mientras usa la GPU. Si el proceso
+Vulkan falla, el mismo bloque se repite automáticamente y cambia a “CPU”. Un
+resultado CPU no debe registrarse como benchmark Vulkan.
+
+Para comparar VAD, use el mismo archivo y ejecute una vez con VAD y otra sin
+VAD. Archivos con mucho silencio suelen beneficiarse más. La precisión y el
+tiempo también varían con ruido, solapamiento de voces y claridad del habla.

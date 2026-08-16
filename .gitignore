@@ -1,0 +1,19 @@
+# Local cross-compilation and downloaded dependencies
+/build/
+/node_modules/
+/.vozlarga-update.json
+/VozLarga-PC-1.0/
+/VozLarga-PC-1.0-Windows-x64.zip
+
+# Generated artifacts
+*.pdb
+*.obj
+*.res
+
+# Python caches
+__pycache__/
+*.pyc
+
+# OS/editor files
+.DS_Store
+Thumbs.db

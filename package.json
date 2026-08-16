@@ -1,0 +1,34 @@
+{
+  "name": "vozlarga-pc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transcripción local de grabaciones extensas en Windows 10 x64 con Vulkan y respaldo CPU",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jurugames2007-svg/Audiolibro.git"
+  },
+  "vozlarga": {
+    "updateOwner": "jurugames2007-svg",
+    "updateRepo": "Audiolibro",
+    "updateBranch": "arena/01a006c1-audiolibro"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "postinstall": "node scripts/setup.mjs",
+    "setup": "node scripts/setup.mjs",
+    "start": "node scripts/auto-start.mjs",
+    "start:offline": "node scripts/start.mjs",
+    "update": "node scripts/update.mjs",
+    "test:formats": "node scripts/test-formats.mjs",
+    "evaluate:wer": "node scripts/wer.mjs",
+    "verify": "node scripts/verify.mjs",
+    "portable:zip": "node scripts/zip.mjs"
+  },
+  "optionalDependencies": {
+    "@ffmpeg-installer/win32-x64": "4.1.0"
+  }
+}
