@@ -41,7 +41,8 @@ MKV, WebM, MOV y AVI. La pista se normaliza a PCM de 16 kHz por bloques.
 
 MEJORA Y DIAGNÓSTICO DEL AUDIO (SIN OTRO MODELO IA)
 ----------------------------------------------------
-“Mejorar voz/ruido” viene activado. Usa filtros deterministas de FFmpeg para:
+“Mejorar voz/ruido” es opcional y viene desactivado para no alterar una voz que
+ya es clara. Actívelo solo si hay ruido o volumen irregular. Usa FFmpeg para:
 • eliminar retumbo bajo 70 Hz y frecuencias no vocales sobre 7600 Hz;
 • reducir ruido estacionario como hiss o ventilación;
 • normalizar diferencias de volumen sin recortar intencionalmente la señal.
@@ -54,8 +55,16 @@ CONTEXTO, NOMBRES Y ACENTOS
 ---------------------------
 En “Contexto” puede escribir nombres propios, empresa, localidad, vocabulario
 médico/legal/técnico y dialecto (por ejemplo: “español chileno, Biobío”). Ese
-texto y el final del bloque anterior se pasan como prompt al siguiente bloque.
-Esto reduce cambios de grafía y mejora continuidad, pero no altera el audio.
+texto se pasa como vocabulario al decodificador. La hipótesis del bloque anterior
+no se realimenta: si contuviera un error podría repetirlo en bloques posteriores.
+
+PRECISIÓN Y PALABRAS INVENTADAS
+-------------------------------
+La versión actual usa Large v3 Turbo Q5_0 en lugar de Small Q5_1, beam search 8,
+temperatura 0 y sin fallback a temperaturas altas. La configuración busca omitir
+regiones sin habla en vez de generar una continuación. Silero VAD y el detector de
+silencio evitan transcribir regiones sin habla. Ningún reconocedor garantiza
+cero errores: use “Contexto” para las grafías críticas y revise el TXT final.
 
 REUNIONES Y HABLANTES
 ---------------------
@@ -80,9 +89,9 @@ lo publica mediante reemplazo atómico y solo entonces borra los temporales.
 
 SILERO VAD
 ----------
-Silero VAD es opcional y viene desactivado para priorizar la ejecución robusta
-de grabaciones largas. Puede acelerar archivos con silencios cuando Vulkan está
-funcionando. Si se activa el respaldo CPU, VozLarga desactiva VAD automáticamente
+Silero VAD viene activado para Vulkan porque evita enviar silencios, música sin
+voz y ruido al reconocedor, reduciendo palabras inventadas. Si se activa el
+respaldo CPU, VozLarga desactiva VAD automáticamente
 porque su ruta CPU en whisper.cpp 1.9.2 puede ser extremadamente lenta. VAD
 puede omitir música sin voz, risas y pausas cuando Vulkan está disponible, pero
 ningún filtro determinista distingue perfectamente música con voz de habla.
@@ -99,9 +108,9 @@ lo que hacer clic en una palabra para saltar al audio no está disponible.
 PRIVACIDAD
 ----------
 VozLarga.exe no contiene código de red y solo inicia ejecutables locales.
-FFmpeg, whisper.cpp y los modelos trabajan en este equipo. Whisper Small es
-imprescindible para convertir voz en texto; sin un modelo de reconocimiento no
-existe transcripción automática. Las mejoras descritas no agregan otra IA.
+FFmpeg, whisper.cpp y los modelos trabajan en este equipo. Whisper Large v3
+Turbo es imprescindible para convertir voz en texto; sin un modelo de
+reconocimiento no existe transcripción automática. No se usa IA externa.
 
 RENDIMIENTO
 -----------
@@ -127,7 +136,7 @@ CONTENIDO
 VozLarga.exe                  Interfaz y coordinador Win32
 engine/whisper-vulkan.exe     whisper.cpp 1.9.2 con backend Vulkan
 engine/whisper-cpu.exe        whisper.cpp 1.9.2 solo CPU
-models/ggml-small-q5_1.bin    Whisper Small multilingüe Q5_1
+models/ggml-large-v3-turbo-q5_0.bin  Whisper Large v3 Turbo multilingüe Q5_0
 models/ggml-silero-v6.2.0.bin Silero VAD opcional
 tools/ffmpeg.exe              Conversor multimedia local
 licenses/                     Licencias de terceros

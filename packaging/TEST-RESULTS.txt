@@ -44,9 +44,9 @@ Resultados:
 Resultado: APROBADO para continuidad de un trabajo MP3 de 2 horas.
 
 El uso de Tiny en esta prueba valida el pipeline, no el rendimiento ni la
-precisión de Whisper Small Q5_1. La distribución sigue usando exclusivamente
-Small Q5_1. La prueba física de rendimiento Small+Vulkan debe hacerse en la
-RX 5600 XT del destinatario.
+precisión del producto. La distribución actual usa Large v3 Turbo Q5_0 para
+reducir errores e incoherencias. Su prueba física de rendimiento y precisión
+con Vulkan debe hacerse en la RX 5600 XT del destinatario.
 
 REGRESIÓN DETECTADA Y CORREGIDA: SILERO CPU
 -------------------------------------------

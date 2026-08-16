@@ -2,7 +2,7 @@
 
 `EVALUACION-VOZLARGA-10-10.xlsx` separa evidencia medida de objetivos todavía
 no evaluables. No asigna WER inventados ni atribuye resultados de Tiny/CPU al
-producto Small/Vulkan.
+producto Large v3 Turbo/Vulkan.
 
 ## Calcular WER con referencias reales
 
@@ -26,5 +26,5 @@ Genera MP3 y M4A sintéticos de dos horas, aplica el preprocesamiento, valida lo
 
 Para completar las filas marcadas `NO EVALUADO` se necesitan los audios y
 referencias humanas descritos en la hoja **Casos requeridos**, además de ejecutar
-Small Q5_1 + Vulkan en la RX 5600 XT física. El umbral de 100% de diarización en
+Large v3 Turbo Q5_0 + Vulkan en la RX 5600 XT física. El umbral de 100% de diarización en
 voces solapadas del mismo canal no está soportado sin otro modelo específico.

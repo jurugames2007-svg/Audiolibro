@@ -12,11 +12,11 @@ const forceWindows = process.env.VOZLARGA_FORCE_WINDOWS_SETUP === '1';
 
 const assets = [
   {
-    name: 'Whisper Small multilingüe Q5_1',
-    destination: path.join(portable, 'models', 'ggml-small-q5_1.bin'),
-    url: process.env.VOZLARGA_WHISPER_MODEL_URL || 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin?download=true',
-    size: 190085487,
-    sha256: 'ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb',
+    name: 'Whisper Large v3 Turbo multilingüe Q5_0',
+    destination: path.join(portable, 'models', 'ggml-large-v3-turbo-q5_0.bin'),
+    url: process.env.VOZLARGA_WHISPER_MODEL_URL || 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin?download=true',
+    size: 574041195,
+    sha256: '394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2',
   },
   {
     name: 'Silero VAD 6.2.0',
@@ -28,7 +28,7 @@ const assets = [
 ];
 
 const runtimeFiles = [
-  ['VozLarga.exe', 'VozLarga.exe', 912896, 'ef81f46e94d0bd38b927182172770f891ef8b0e579996212d7c5ac9e3cf21231'],
+  ['VozLarga.exe', 'VozLarga.exe', 910848, '255d3b960cd7989523da34bfac8630740f994703e8dcbb9e787d655c0ab207c2'],
   ['engine/whisper-vulkan.exe', 'engine/whisper-vulkan.exe', 54074880, 'a71b5794f0ce6a7646294600bc55319574a5591eab36dba80c9bccae8429bf82'],
   ['engine/whisper-cpu.exe', 'engine/whisper-cpu.exe', 3145728, 'd3c3fa58dffbfde190731f140cff959de5dc9fc779423e0ff4d5b8164adc640e'],
 ];

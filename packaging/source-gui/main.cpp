@@ -508,11 +508,11 @@ bool ValidateRuntime(const Job &job, std::wstring &error) {
         {Join(g_moduleDir, L"tools\\ffmpeg.exe"), L"FFmpeg"},
         {Join(g_moduleDir, L"engine\\whisper-vulkan.exe"), L"motor Vulkan"},
         {Join(g_moduleDir, L"engine\\whisper-cpu.exe"), L"motor CPU"},
-        {Join(g_moduleDir, L"models\\ggml-small-q5_1.bin"), L"modelo Whisper Small Q5_1"}
+        {Join(g_moduleDir, L"models\\ggml-large-v3-turbo-q5_0.bin"), L"modelo Whisper Large v3 Turbo Q5_0"}
     };
     for (const auto &n : needs) if (!Exists(n.path)) { error = L"Falta " + std::wstring(n.label) + L":\r\n" + n.path; return false; }
-    const auto model = Join(g_moduleDir, L"models\\ggml-small-q5_1.bin");
-    if (FileSize64(model) != 190085487ULL) { error = L"El modelo Whisper no tiene el tamaño esperado (190085487 bytes). Vuelva a extraer el ZIP."; return false; }
+    const auto model = Join(g_moduleDir, L"models\\ggml-large-v3-turbo-q5_0.bin");
+    if (FileSize64(model) != 574041195ULL) { error = L"El modelo Whisper Large v3 Turbo no tiene el tamaño esperado (574041195 bytes). Ejecute npm run setup."; return false; }
     if (job.vad && job.backend != BackendChoice::Cpu) {
         auto v = Join(g_moduleDir, L"models\\ggml-silero-v6.2.0.bin");
         if (!Exists(v) || FileSize64(v) != 885098ULL) { error = L"Silero VAD está activado, pero su modelo falta o está dañado."; return false; }
@@ -531,7 +531,7 @@ void Worker(Job job) {
     const std::wstring ffmpeg = Join(g_moduleDir, L"tools\\ffmpeg.exe");
     const std::wstring vkExe = Join(g_moduleDir, L"engine\\whisper-vulkan.exe");
     const std::wstring cpuExe = Join(g_moduleDir, L"engine\\whisper-cpu.exe");
-    const std::wstring model = Join(g_moduleDir, L"models\\ggml-small-q5_1.bin");
+    const std::wstring model = Join(g_moduleDir, L"models\\ggml-large-v3-turbo-q5_0.bin");
     const std::wstring vadModel = Join(g_moduleDir, L"models\\ggml-silero-v6.2.0.bin");
     const std::wstring work = WorkDirFor(job.output);
     const std::wstring checkpointPath = Join(work, L"checkpoint.ini");
@@ -543,6 +543,7 @@ void Worker(Job job) {
 
     SetStage(Stage::Probing, L"Analizando la duración del archivo…");
     PostLog(L"Archivo: " + job.input);
+    PostLog(L"Modelo: Whisper Large v3 Turbo Q5_0; decodificación determinista sin fallback de temperatura.");
     PostLog(job.enhance ? L"Preprocesamiento: reducción de ruido y normalización activadas."
                         : L"Preprocesamiento: audio original sin filtros.");
     if (job.stereoDiarization) PostLog(L"Reunión estéreo: se conservarán dos canales y se etiquetarán por canal.");
@@ -573,7 +574,7 @@ void Worker(Job job) {
     PostLog(L"Duración: " + FormatClock(static_cast<unsigned long long>(duration * 1000)) + L". Bloques: " + std::to_wstring(total) + L".");
 
     Checkpoint cp{};
-    cp.fingerprint = Fingerprint(job.input) + (job.vad ? "-vad1" : "-vad0") +
+    cp.fingerprint = Fingerprint(job.input) + "-large-v3-turbo-q5_0" + (job.vad ? "-vad1" : "-vad0") +
                      (job.enhance ? "-enh1" : "-enh0") + (job.stereoDiarization ? "-st1-" : "-st0-") +
                      FingerprintText(job.context);
     cp.total = total;
@@ -654,26 +655,18 @@ void Worker(Job job) {
             continue;
         }
 
+        // Only use vocabulary explicitly supplied by the user. Feeding the
+        // previous hypothesis back into Whisper can reinforce a wrong phrase
+        // and turn it into an incoherent repetition across later blocks.
         std::wstring prompt = job.context;
-        if (prompt.size() > 700) prompt.resize(700); // preserve user vocabulary first
-        if (i > 0) {
-            std::string previousBytes;
-            if (ReadBytes(ChunkName(work, i - 1, L".txt"), previousBytes)) {
-                std::wstring previous = FromUtf8(TrimText(std::move(previousBytes)));
-                if (previous.size() > 450) previous = previous.substr(previous.size() - 450);
-                if (!previous.empty()) {
-                    if (!prompt.empty()) prompt += L". ";
-                    prompt += L"Contexto anterior: " + previous;
-                }
-            }
-        }
+        if (prompt.size() > 800) prompt.resize(800);
         for (wchar_t &c : prompt) if (c == L'\r' || c == L'\n' || c == L'\t') c = L' ';
-        if (prompt.size() > 1200) prompt = prompt.substr(prompt.size() - 1200);
 
         std::vector<std::wstring> args;
         auto makeArgs = [&](bool cpu) {
             args = {cpu ? cpuExe : vkExe, L"-m", model, L"-f", wav, L"-l", L"es", L"-t", std::to_wstring(job.threads),
-                    L"-otxt", L"-of", outBase, L"-np", L"-nt", L"-sns", L"-nth", L"0.55"};
+                    L"-otxt", L"-of", outBase, L"-np", L"-nt", L"-sns", L"-nth", L"0.55",
+                    L"-nf", L"-bs", L"8", L"-bo", L"5"};
             if (job.stereoDiarization) args.push_back(L"-di");
             if (!prompt.empty()) { args.push_back(L"--prompt"); args.push_back(prompt); }
             if (cpu) args.push_back(L"-ng");
@@ -871,8 +864,8 @@ LRESULT CALLBACK WndProc(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Automático (Vulkan → CPU)"));
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Vulkan (con respaldo CPU)"));
         SendMessageW(g_backend, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Solo CPU")); SendMessageW(g_backend, CB_SETCURSEL, 0, 0);
-        g_enhance = Make(w, L"BUTTON", L"Mejorar voz/ruido", BS_AUTOCHECKBOX, ID_ENHANCE); SendMessageW(g_enhance, BM_SETCHECK, BST_CHECKED, 0);
-        g_vad = Make(w, L"BUTTON", L"Silero VAD (solo Vulkan)", BS_AUTOCHECKBOX, ID_VAD); SendMessageW(g_vad, BM_SETCHECK, BST_UNCHECKED, 0);
+        g_enhance = Make(w, L"BUTTON", L"Mejorar voz/ruido", BS_AUTOCHECKBOX, ID_ENHANCE); SendMessageW(g_enhance, BM_SETCHECK, BST_UNCHECKED, 0);
+        g_vad = Make(w, L"BUTTON", L"Silero VAD (solo Vulkan)", BS_AUTOCHECKBOX, ID_VAD); SendMessageW(g_vad, BM_SETCHECK, BST_CHECKED, 0);
         g_stereo = Make(w, L"BUTTON", L"Reunión estéreo (canales)", BS_AUTOCHECKBOX, ID_STEREO); SendMessageW(g_stereo, BM_SETCHECK, BST_UNCHECKED, 0);
         Make(w, L"STATIC", L"Hilos CPU", SS_LEFT, 9004);
         SYSTEM_INFO si{}; GetSystemInfo(&si); int threads = std::max<DWORD>(1, si.dwNumberOfProcessors > 2 ? si.dwNumberOfProcessors - 1 : si.dwNumberOfProcessors);

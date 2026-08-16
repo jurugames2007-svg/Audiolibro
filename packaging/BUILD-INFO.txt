@@ -29,10 +29,12 @@ Compilación de shaders
   Import library de vulkan-1.dll generada desde Vulkan-Loader/vulkan-1.def
 
 Modelos
-  Whisper Small multilingüe Q5_1
-  Archivo: ggml-small-q5_1.bin
-  Tamaño: 190085487 bytes
-  SHA-256: ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb
+  Whisper Large v3 Turbo multilingüe Q5_0
+  Archivo: ggml-large-v3-turbo-q5_0.bin
+  Tamaño: 574041195 bytes
+  SHA-256: 394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2
+  Elegido para sustituir Small Q5_1: modelo base de 809M parámetros y decoder
+  Turbo de 4 capas para mejorar precisión sin adoptar el coste de Large v3 completo.
 
   Silero VAD 6.2.0
   Archivo: ggml-silero-v6.2.0.bin
@@ -71,10 +73,13 @@ PIPELINE DE LA INTERFAZ
   dynaudnorm. Si falla, reintento automático sin filtros.
 • Analizador PCM interno de RMS, pico, clipping, formato y silencio; bloques
   silenciosos se omiten sin llamar a Whisper.
-• Idioma fijado a español; prompt del usuario más contexto del bloque anterior.
+• Idioma fijado a español; solo se usa el vocabulario escrito por el usuario.
+  No se realimenta la hipótesis anterior porque puede propagar una frase falsa.
+• Decodificación conservadora: temperatura 0, sin fallback de temperatura,
+  beam search 8, supresión no verbal y umbral no-speech 0,55.
 • Diarización estéreo opcional de whisper.cpp; no separa voces del mismo canal.
-• Silero VAD opcional, desactivado por defecto y limitado a Vulkan; el respaldo
-  CPU lo omite para evitar la regresión de rendimiento medida en audio largo.
+• Silero VAD opcional, activado por defecto para Vulkan; el respaldo CPU lo
+  omite para evitar la regresión de rendimiento medida en audio largo.
 • Vulkan primero, watchdog de 20 minutos por bloque y reintento CPU sin VAD
   del mismo bloque ante error o timeout.
 • Checkpoint atómico después de verificar cada TXT de bloque.
@@ -90,8 +95,8 @@ VERIFICACIÓN REALIZADA EN EL ENTORNO DE CONSTRUCCIÓN
 • Inspección PE/COFF x64 y dependencias importadas: correcta.
 • whisper-vulkan.exe importa vulkan-1.dll; whisper-cpu.exe no la importa.
 • Los motores y la GUI no requieren libc++, libunwind ni DLL de ggml.
-• Silero VAD: tamaño y SHA-256 verificados localmente. Whisper Small: setup
-  exige tamaño y SHA-256 oficiales antes de aceptar la descarga.
+• Silero VAD: tamaño y SHA-256 verificados localmente. Large v3 Turbo Q5_0:
+  setup exige tamaño y SHA-256 oficiales antes de aceptar la descarga.
 • Regresión con MP3 y M4A sintéticos de 2 horas: 9 bloques por archivo, 18 WAV
   validados. Pipeline completo MP3 de 2 horas: 9/9 bloques y TXT final válidos.
   Consulte TEST-RESULTS.txt.
